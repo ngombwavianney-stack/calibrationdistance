@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>potmeter</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Sensor Reading</h2>
+<div id="output"></div>
+
+<div class="brightness-wrapper">
+    <div class="brightness-label">Brightness</div>
+    <div class="brightness-track">
+        <div class="brightness-fill" id="brightnessBar"></div>
+    </div>
+    <div id="brightnessDebug" style="font-size:11px; color:#ef8989; margin-top:6px; letter-spacing:1px;"></div>
+</div>
+
+<script>
+async function getSensorData() {
+    const response = await fetch("api.php");
+    const rows = await response.json();
+    const row = Array.isArray(rows) ? rows[rows.length - 1] : rows;
+
+    if (row) {
+        document.getElementById("output").innerHTML = `
+            <table border="1">
+                <tr>
+                    <th>Id</th><th>Sensor</th><th>Distance</th><th>Recorded_at</th>
+                </tr>
+                <tr>
+                    <td>${row.id}</td><td>${row.Sensor}</td><td>${row.data} cm</td><td>${row.recorded_at}</td>
+                </tr>
+            </table>
+        `;
+
+        var val = parseFloat(row.data);   
+        var pct = Math.min(Math.max(val / 40, 0), 1) * 100;  
+
+        var bar = document.getElementById("brightnessBar");
+        bar.style.width = pct + "%";
+
+
+        var brightness = 0.15 + (pct / 100) * 0.85; 
+        document.documentElement.style.filter = `brightness(${brightness})`;
+
+        document.getElementById("brightnessDebug").textContent =
+            `value: ${val} cm  |  bar: ${pct.toFixed(1)}%  |  page brightness: ${brightness.toFixed(2)}`;
+    }
+}
+
+getSensorData();
+setInterval(getSensorData, 100);
+</script>
+</body>
+</html>
